@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MemoryFilesGame.Core\MemoryFilesGame.Core.csproj" />
+    <ProjectReference Include="..\MemoryFilesGame.ImageOpener\MemoryFilesGame.ImageOpener.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="CopyCardOpener" AfterTargets="Build">
+    <ItemGroup>
+      <CardOpenerFiles Include="$(MSBuildProjectDirectory)\..\MemoryFilesGame.ImageOpener\bin\$(Configuration)\net8.0-windows\MemoryFilesGame.ImageOpener.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CardOpenerFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>
