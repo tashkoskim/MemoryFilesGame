@@ -5,8 +5,14 @@ namespace MemoryFilesGame.Core;
 public sealed class GameState
 {
     public string? PendingCardId { get; set; }
+    public DateTimeOffset StartedAt { get; set; }
+    public int MoveCount { get; set; }
+    public int PairCount { get; set; }
+    public bool IsCompleted { get; set; }
     public List<GameCard> Cards { get; set; } = [];
 }
+
+public sealed record GameProgress(bool IsCompleted, TimeSpan Elapsed, int MoveCount, int PairCount);
 
 public sealed class GameCard
 {

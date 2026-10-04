@@ -2,8 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
+    <RestoreSources>https://api.nuget.org/v3/index.json</RestoreSources>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="8.0.12" />
+  </ItemGroup>
 
 </Project>

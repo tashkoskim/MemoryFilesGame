@@ -31,6 +31,8 @@ namespace MemoryFilesGame.Core
 
             GameStateStore.Save(new GameState
             {
+                StartedAt = DateTimeOffset.UtcNow,
+                PairCount = numPairs,
                 Cards = files.Select(file => new GameCard
                 {
                     CardId = file.CardId,
@@ -42,21 +44,22 @@ namespace MemoryFilesGame.Core
             });
         }
 
-        public void OpenCard(string cardId)
+        public GameProgress OpenCard(string cardId)
         {
             GameState game = GameStateStore.Load();
             GameCard selected = game.Cards.SingleOrDefault(card => card.CardId == cardId)
                 ?? throw new InvalidDataException("The selected card is not part of this game.");
 
-            if (selected.IsMatched)
+            if (selected.IsMatched || game.IsCompleted)
             {
-                return;
+                return CreateProgress(game);
             }
 
             UpdateShortcutIcon(selected);
 
             if (game.PendingCardId is not null && game.PendingCardId != selected.CardId)
             {
+                game.MoveCount++;
                 GameCard pending = game.Cards.Single(card => card.CardId == game.PendingCardId);
                 if (pending.PairId == selected.PairId)
                 {
@@ -79,8 +82,24 @@ namespace MemoryFilesGame.Core
                 game.PendingCardId = selected.CardId;
             }
 
+            game.IsCompleted = game.Cards.All(card => card.IsMatched);
             GameStateStore.Save(game);
+            return CreateProgress(game);
         }
+
+        public void RevealAllCards()
+        {
+            foreach (GameCard card in GameStateStore.Load().Cards)
+            {
+                UpdateShortcutIcon(card);
+            }
+        }
+
+        private static GameProgress CreateProgress(GameState game) => new(
+            game.IsCompleted,
+            DateTimeOffset.UtcNow - game.StartedAt,
+            game.MoveCount,
+            game.PairCount);
 
         private void CreateDirectories()
         {
@@ -121,7 +140,8 @@ namespace MemoryFilesGame.Core
 
         private List<MemoryFile> GenerateMemoryFiles(int numPairs)
         {
-            const string availableSymbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            // Prefer expressive Unicode symbols; ordinary letters/numbers are only fallbacks for very large games.
+            const string availableSymbols = "☺☻♥♦♣♠♡★☆✦✧✪✯☀☁☂☃☄☾☽⚡❄✿❀❁❂☠☢☣⚔⚒⚙⚑⚐✓✔✕✖↑↓←→↖↗↘↙↕↔➜➤➔▲▼◀▶△▽◁▷◆◇■□●○◉◎◌◍◐◑◒◓♔♕♖♗♘♙♚♛♜♝♞♟♪♫♩♬♭♮♯☕☎✉✂✎✐✏✒⌕⌂☜☞☝☟ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
             if (numPairs > availableSymbols.Length)
             {
@@ -130,8 +150,8 @@ namespace MemoryFilesGame.Core
 
             List<MemoryFile> files = new(numPairs * 2);
             List<char> availableCharacters = availableSymbols
-                .OrderBy(_ => Random.Shared.Next())
                 .Take(numPairs)
+                .OrderBy(_ => Random.Shared.Next())
                 .ToList();
 
             for (int i = 0; i < numPairs; i++)

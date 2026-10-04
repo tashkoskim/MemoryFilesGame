@@ -3,20 +3,38 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
+    <RestoreSources>https://api.nuget.org/v3/index.json</RestoreSources>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <ApplicationIcon>FileMemoryGame.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MemoryFilesGame.Core\MemoryFilesGame.Core.csproj" />
-    <ProjectReference Include="..\MemoryFilesGame.ImageOpener\MemoryFilesGame.ImageOpener.csproj" ReferenceOutputAssembly="false" />
+    <Content Include="FileMemoryGame.ico" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MemoryFilesGame.Core\MemoryFilesGame.Core.csproj" />
+  </ItemGroup>
+
+  <Target Name="BuildCardOpener" BeforeTargets="Build">
+    <MSBuild Projects="$(MSBuildProjectDirectory)\..\MemoryFilesGame.ImageOpener\MemoryFilesGame.ImageOpener.csproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration)" />
+  </Target>
 
   <Target Name="CopyCardOpener" AfterTargets="Build">
     <ItemGroup>
       <CardOpenerFiles Include="$(MSBuildProjectDirectory)\..\MemoryFilesGame.ImageOpener\bin\$(Configuration)\net8.0-windows\MemoryFilesGame.ImageOpener.*" />
     </ItemGroup>
     <Copy SourceFiles="@(CardOpenerFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="PublishCardOpener" AfterTargets="Publish">
+    <MSBuild Projects="$(MSBuildProjectDirectory)\..\MemoryFilesGame.ImageOpener\MemoryFilesGame.ImageOpener.csproj"
+             Targets="Restore;Publish"
+             Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=$(SelfContained);PublishSingleFile=true;PublishDir=$(MSBuildProjectDirectory)\$(PublishDir)"
+             RemoveProperties="PublishProfile" />
   </Target>
 
 </Project>
